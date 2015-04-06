@@ -1,0 +1,21 @@
+{
+  "name": "restserver",
+  "version": "1.0.0",
+  "description": "restful server without express",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "none"
+  },
+  "keywords": [
+    "restful"
+  ],
+  "author": "eunjoo im",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {}
+}
