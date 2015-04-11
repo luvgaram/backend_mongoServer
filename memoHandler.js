@@ -16,7 +16,6 @@ var http = require('http'),
     formidable = require('formidable');
 
 var UPLOAD_FOLDER = "./upload/"
-var UPLOAD_FOLDER_ = "/upload"
 
 exports.create = function(req, res, form) { 
 
@@ -86,14 +85,45 @@ exports.create = function(req, res, form) { 
 };  
 
 
-exports.read = function(req, res) { 
-    _findMemo({}, function(error, results) { 
-        res.writeHead(200, {
-            "Content-Type": "application/json"
+exports.read = function(req, res, body) { 
+
+
+    var query = url.parse(req.url).query;
+
+    console.log('query : ' + query);
+
+    var vpath = querystring.parse(query)['path'];
+    console.log('vpath : ' + typeof vpath);
+
+    if (typeof vpath !== 'undefined') {
+
+        console.log(vpath);
+
+        fs.readFile(UPLOAD_FOLDER + vpath, function(err, data) {
+
+            if (err) {
+                res.writeHead(404, {
+                    'content-type': 'text/plain'
+                });
+                res.end('404');
+            }
+
+            res.writeHead(200, {
+                'Content-Type': 'image/png'
+            });
+            res.end(data);
+
+        });
+
+    } else {
+        _findMemo({}, function(error, results) { 
+            res.writeHead(200, {
+                "Content-Type": "application/json"
+            }); 
+            res.write(JSON.stringify(results)); 
+            res.end(); 
         }); 
-        res.write(JSON.stringify(results)); 
-        res.end(); 
-    }); 
+    }
 };  
 
 exports.update = function(req, res, body) { 
@@ -149,7 +179,8 @@ function _insertMemo(body, callback) { 
 }   
 
 function _findMemo(where, callback) { 
-    where = where || {} 
+    where = where || {} ;
+    
     db.open(function(err) {
         if (err) throw err;
         console.log("where " + where.toString());
@@ -159,6 +190,7 @@ function _findMemo(where, callback) { 
             callback(null, docs);
         });
     });
+    
 } 
 
 function _updateMemo(where, body, callback) { 
