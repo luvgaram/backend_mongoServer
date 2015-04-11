@@ -1,88 +1,23 @@
 /** memoHandler.js **/   
 
 var mongodb = require('mongodb');
+
 var server = new mongodb.Server('localhost', 27017, {});
 var db = new mongodb.Db('mydatabase', server, {
     w: 1
 });
+var querystring = require('querystring'); 
+var url = require('url');   
 
-var http = require('http'),
-    util = require('util'),
-    path = require('path'),
-    url = require('url'),
-    fs = require('fs'),
-    mime = require('mime'),
-    querystring = require('querystring'),
-    formidable = require('formidable');
 
-var UPLOAD_FOLDER = "./upload/"
-var UPLOAD_FOLDER_ = "/upload"
-
-exports.create = function(req, res, form) { 
-
-    var files = [],
-        fields = [],
-        resultPaths = [];
-
-    console.log("execute !! upload folder ")
-    form.uploadDir = UPLOAD_FOLDER;
-    form.keepExtensions = true;
-    form.multiple="multiple"; // ej
-    form
-        .on('field', function(field, value) {
-            console.log(field, value);
-            fields.push([field, value]);
-        })
-        .on('file', function(field, file) {
-            console.log(field, file);
-            files.push([field, file]);
-        })
-        .on('progress', function(bytesReceived, bytesExpected) {
-            console.log('progress: ' + bytesReceived + '/' + bytesExpected);
-        })
-        .on('end', function() {
-            console.log('-> upload done');
-            console.log('parse - ' + JSON.stringify(files));
-            var memo = {}
-
-            for (var e in files) {
-                resultPaths.push(files[e][1].path);
-            }
-
-            console.log('author - ' + JSON.stringify(fields[0][1]));
-
-            var check;
-
-            for (var e in fields) {
-                if (fields[e][0] == "author") memo.author = fields[e][1];
-                else if (fields[e][0] == "memo") memo.memo = fields[e][1];
-            }
-
-            memo.date = new Date();
-            memo.file = resultPaths
-
-            console.log('memo - ' + JSON.stringify(memo));
-
-            //mongodb only
-            db.open(function(err) {
-                if (err) throw err;
-                db.collection('memo').insert(memo, function(err, inserted) {
-                    if (err) throw err;
-                    console.dir("successfully inserted: " + JSON.stringify(inserted));
-                    db.close();
-                });
-            });
-        });
-
-    form.parse(req, function(err, fields, files) {
-
+exports.create = function(req, res, body) { 
+    _insertMemo(body, function(error, result) { 
         res.writeHead(200, {
-            'content-type': 'application/json'
-        });
-
-        res.end(JSON.stringify(resultPaths));
-    });
-
+            "Content-Type": "application/json"
+        }); 
+        res.write('{"type": "creatememo"}'); 
+        res.end(); 
+    }); 
 };  
 
 
@@ -146,7 +81,7 @@ function _insertMemo(body, callback) { 
             callback();
         });
     });
-}   
+}  
 
 function _findMemo(where, callback) { 
     where = where || {} 
